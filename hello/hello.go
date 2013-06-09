@@ -54,17 +54,6 @@ func sign(w http.ResponseWriter, r *http.Request){
     http.Redirect(w, r, "/", http.StatusFound)
 }
 
-var signTemplate = template.Must(template.New("sign").Parse(signTemplateHTML))
-
-const signTemplateHTML = `
-<html>
-    <body>
-        <p>You wrote: </p>
-        <pre>{{.}}</pre>
-    </body>
-</html>
-`
-
 func handle(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
     q := datastore.NewQuery("Greeting").Order("-Date").Limit(10)
