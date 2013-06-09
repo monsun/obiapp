@@ -14,7 +14,7 @@ func init(){
 }
 
 func root(w http.ResponseWriter, r *http.Request){
-    return fmt.Fprint(w, guestbookForm)
+    fmt.Fprint(w, guestbookForm)
 }
 
 const guestbookForm = `
