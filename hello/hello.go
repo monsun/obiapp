@@ -17,7 +17,7 @@ type Greeting struct {
 }
 
 func init(){
-    http.HandleFunc("/", handle)
+    http.HandleFunc("/hello", handle)
     http.HandleFunc("/sign", sign)
 }
 
@@ -51,7 +51,7 @@ func sign(w http.ResponseWriter, r *http.Request){
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    http.Redirect(w, r, "/", http.StatusFound)
+    http.Redirect(w, r, "/hello", http.StatusFound)
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
