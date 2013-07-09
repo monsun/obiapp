@@ -10,6 +10,7 @@ import (
 
 type Excercise struct {
     Name string
+    DSKeyEncoded string
 }
 
 func init(){
@@ -26,13 +27,15 @@ func AddExcercise(w http.ResponseWriter, r *http.Request){
         Name: r.FormValue("ExcerciseName"),
     }
 
-    key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "Excercise", nil), &exc)
+	key := *datastore.NewKey(c, "Excercise", exc.Name, 0, nil)
+	exc.DSKeyEncoded = key.Encode()
+    _, err := datastore.Put(c, &key, &exc)
     if err!= nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
-    c.Debugf("Saved", key)
+    c.Debugf("Saved", key, exc.DSKeyEncoded, exc.Name)
 
     http.Redirect(w, r, "/obi/list_excercises", http.StatusFound)
 }
@@ -63,7 +66,7 @@ const excerciseListTemplateHTML = `
         <h3>View excercises</h3>
         {{range .}}
             <form method="post" action="delete_excercise">
-                <input type="hidden" name="KeyToDelete" value="{{.Name}}"/>
+                <input type="hidden" name="KeyToDelete" value="{{.DSKeyEncoded}}"/>
                 <pre>{{.Name}}</pre>
                 <input type="submit" value="Delete!"/>
             </form>
@@ -80,26 +83,29 @@ const excerciseListTemplateHTML = `
 func DeleteExcercise(w http.ResponseWriter, r *http.Request){
 
     c := appengine.NewContext(r)
-    keyVal := r.FormValue("KeyToDelete")
+    keyVal, err := datastore.DecodeKey(r.FormValue("KeyToDelete"))
 
-    if keyVal == "" {
+	if err!=nil {
+		http.Error(w, "Could not decode key from string "+r.FormValue("KeyToDelete"), http.StatusInternalServerError)
+		return
+	}
+
+    if keyVal == nil {
         http.Error(w, "Nil key to delete", http.StatusInternalServerError)
         return
     }
 
-    key, err := datastore.DecodeKey(keyVal)
-
     if err != nil {
         c.Errorf(err.Error())
         http.Error(w, err.Error(), http.StatusInternalServerError)
-//        return
+        return
     }
 
-    if err := datastore.Delete(c, key); err != nil {
-        c.Infof("Key ",key)
+    if err := datastore.Delete(c, keyVal); err != nil {
+        c.Infof("Key ",keyVal)
         c.Errorf(err.Error())
         http.Error(w, err.Error(), http.StatusInternalServerError)
-//        return
+        return
     }
 
     http.Redirect(w, r, "/obi/list_excercises", http.StatusFound)
