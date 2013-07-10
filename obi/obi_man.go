@@ -3,7 +3,7 @@ package obi
 import (
     "appengine"
     "appengine/datastore"
-    "fmt"
+//    "fmt"
     "net/http"
     "html/template"
 )
@@ -63,12 +63,14 @@ var excerciseListTemplate = template.Must(template.New("ExcerciseList").Parse(ex
 const excerciseListTemplateHTML = `
 <html>
     <body>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
         <h3>View excercises</h3>
         {{range .}}
             <form method="post" action="delete_excercise">
                 <input type="hidden" name="KeyToDelete" value="{{.DSKeyEncoded}}"/>
                 <pre>{{.Name}}</pre>
-                <input type="submit" value="Delete!"/>
+                <input type="submit" value="Delete!" style="display: inline"/>
+            	<input type="button" value="Edit" style="display: inline" onclick="document.location.href='edit_excercise?KeyToEdit={{.DSKeyEncoded}}'"/>
             </form>
         {{end}} 
 
@@ -85,12 +87,7 @@ func DeleteExcercise(w http.ResponseWriter, r *http.Request){
     c := appengine.NewContext(r)
     keyVal, err := datastore.DecodeKey(r.FormValue("KeyToDelete"))
 
-	if err!=nil {
-		http.Error(w, "Could not decode key from string "+r.FormValue("KeyToDelete"), http.StatusInternalServerError)
-		return
-	}
-
-    if keyVal == nil {
+	if keyVal == nil {
         http.Error(w, "Nil key to delete", http.StatusInternalServerError)
         return
     }
@@ -112,5 +109,61 @@ func DeleteExcercise(w http.ResponseWriter, r *http.Request){
 }
 
 func EditExcercise(w http.ResponseWriter, r *http.Request){
-    fmt.Fprintf(w, "AddExc here!")
+    c := appengine.NewContext(r)
+    keyVal, err := datastore.DecodeKey(r.FormValue("KeyToEdit"))
+ 
+    if err != nil {
+        c.Errorf(err.Error())
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }    
+    
+ 	if keyVal == nil {
+        http.Error(w, "Nil key to edit", http.StatusInternalServerError)
+        return
+    }
+    
+    c.Debugf("Key to load", keyVal)
+    
+    var Exc Excercise
+    err = datastore.Get(c, keyVal, &Exc)
+    
+    if err!=nil{
+    	http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+ 	   
+ 	if r.Method == "POST" {
+ 		Exc.Name = r.FormValue("Name")
+ 	 	
+ 		if _, err := datastore.Put(c, keyVal, &Exc); err!=nil {
+ 			http.Error(w, err.Error(), http.StatusInternalServerError)
+ 		}
+ 		
+ 		http.Redirect(w, r, "/obi/list_excercises", http.StatusFound)
+ 	} else if r.Method == "GET" {
+ 		if err := excerciseEditTemplate.Execute(w, Exc); err != nil {
+        	http.Error(w, err.Error(), http.StatusInternalServerError)
+    	}
+ 	}   
+ 	   
 }
+
+
+var excerciseEditTemplate = template.Must(template.New("ExcerciseEdit").Parse(excerciseEditTemplateHTML))
+
+const excerciseEditTemplateHTML = `
+<html>
+    <body>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+        <h3>Edit excercise</h3>
+        <form method="post" action="edit_excercise">
+        	<input type="hidden" name="KeyToEdit" value="{{.DSKeyEncoded}}"/>
+            <input type="text" value="{{.Name}}"/>
+            <input type="submit" value="Save" style="display: inline"/>
+        </form>
+        
+        <p/>
+        <input type="button" value="Cancel"/> 
+    </body>
+</html>
+`
