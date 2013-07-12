@@ -127,10 +127,11 @@ func EditExcercise(w http.ResponseWriter, r *http.Request){
     
     var Exc Excercise
     err = datastore.Get(c, keyVal, &Exc)
-    
     if err!=nil{
     	http.Error(w, err.Error(), http.StatusInternalServerError)
     }
+ 	 
+ 	
  	   
  	if r.Method == "POST" {
  		Exc.Name = r.FormValue("Name")
@@ -144,7 +145,9 @@ func EditExcercise(w http.ResponseWriter, r *http.Request){
  		if err := excerciseEditTemplate.Execute(w, Exc); err != nil {
         	http.Error(w, err.Error(), http.StatusInternalServerError)
     	}
- 	}   
+ 	} else {
+ 		http.Error(w, "Unsupported method: "+r.Method, http.StatusInternalServerError)
+ 	}  
  	   
 }
 
