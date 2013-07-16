@@ -159,12 +159,12 @@ const excerciseEditTemplateHTML = `
         <h3>Edit excercise</h3>
         <form method="post" action="edit_excercise">
 		<input type="hidden" name="KeyToEdit" value="{{.DSKeyEncoded}}"/>
-            <input type="text" value="{{.Name}}"/>
+            <input type="text" value="{{.Name}}" name="Name"/>
             <input type="submit" value="Save" style="display: inline"/>
         </form>
         
         <p/>
-        <input type="button" value="Cancel"/> 
+        <input type="button" value="Cancel" onclick="document.location.href='list_excercises'"/> 
     </body>
 </html>
 `
