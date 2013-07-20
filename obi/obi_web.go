@@ -2,7 +2,7 @@ package obi
 
 import (
     "appengine"
-    "appengine/datastore"
+    //    "appengine/datastore"
     //    "fmt"
     "html/template"
     "net/http"
@@ -68,22 +68,8 @@ const excerciseListTemplateHTML = `
 func DeleteExcerciseAction(w http.ResponseWriter, r *http.Request) {
 
     c := appengine.NewContext(r)
-    keyVal, err := datastore.DecodeKey(r.FormValue("KeyToDelete"))
 
-    if keyVal == nil {
-        http.Error(w, "Nil key to delete", http.StatusInternalServerError)
-        return
-    }
-
-    if err != nil {
-        c.Errorf(err.Error())
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    if err := datastore.Delete(c, keyVal); err != nil {
-        c.Infof("Key ", keyVal)
-        c.Errorf(err.Error())
+    if err := DeleteExcercise(r.FormValue("KeyToDelete"), c); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
@@ -93,31 +79,19 @@ func DeleteExcerciseAction(w http.ResponseWriter, r *http.Request) {
 
 func EditExcerciseAction(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
-    keyVal, err := datastore.DecodeKey(r.FormValue("KeyToEdit"))
+    var KeyToEdit = r.FormValue("KeyToEdit")
 
+    Exc := Excercise{}
+    err := LoadExcercise(KeyToEdit, c, &Exc)
     if err != nil {
-        c.Errorf(err.Error())
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Could not load excercise:\n"+err.Error(), http.StatusInternalServerError)
         return
-    }
-
-    if keyVal == nil {
-        http.Error(w, "Nil key to edit", http.StatusInternalServerError)
-        return
-    }
-
-    c.Debugf("Key to load", keyVal)
-
-    var Exc Excercise
-    err = datastore.Get(c, keyVal, &Exc)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 
     if r.Method == "POST" {
         Exc.Name = r.FormValue("Name")
 
-        if _, err := datastore.Put(c, keyVal, &Exc); err != nil {
+        if err := EditExcercise(KeyToEdit, Exc, c); err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
         }
 

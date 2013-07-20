@@ -48,7 +48,7 @@ func DeleteExcercise(KeyToDelete string, c appengine.Context) error {
     return nil
 }
 
-func EditExcercise(KeyToEdit string, Name string, c appengine.Context) error {
+func EditExcercise(KeyToEdit string, Exc Excercise, c appengine.Context) error {
     keyVal, err := datastore.DecodeKey(KeyToEdit)
 
     if err != nil {
@@ -57,12 +57,11 @@ func EditExcercise(KeyToEdit string, Name string, c appengine.Context) error {
 
     c.Debugf("Key to load", keyVal)
 
-    var Exc Excercise
-    err = datastore.Get(c, keyVal, &Exc)
-    if err != nil {
-        return err
-    }
-    Exc.Name = Name
+    //var Exc Excercise
+    //err = datastore.Get(c, keyVal, &Exc)
+    //if err != nil {
+    //    return err
+    //}
 
     if _, err := datastore.Put(c, keyVal, &Exc); err != nil {
         return err
@@ -79,7 +78,7 @@ func LoadExcercise(KeyToLoad string, c appengine.Context, Exc *Excercise) error 
         return err
     }
 
-    err = datastore.Get(c, keyVal, &Exc)
+    err = datastore.Get(c, keyVal, Exc)
 
     if err != nil {
         return err
